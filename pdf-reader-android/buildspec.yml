@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - echo "Installing required tools..."
+      - apt-get update -y
+      - apt-get install -y unzip wget
+      - wget https://services.gradle.org/distributions/gradle-8.7-bin.zip
+      - unzip gradle-8.7-bin.zip -d /opt/
+      - export PATH=$PATH:/opt/gradle-8.7/bin
+  build:
+    commands:
+      - echo "Building Android APK..."
+      - chmod +x gradlew || true
+      - ./gradlew clean assembleRelease --no-daemon --stacktrace
+  post_build:
+    commands:
+      - echo "Uploading APK to S3..."
+      - aws s3 cp app/build/outputs/apk/release/app-release.apk s3://pdf-reader-artifacts-yourname/pdf-reader-app.apk
+
+artifacts:
+  files:
+    - app/build/outputs/apk/release/app-release.apk
